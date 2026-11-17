@@ -5,5 +5,12 @@
     "description": "Your first automatically generated page.",
     "createdAt": "2026-11-18",
     "url": "pages/welcome.html"
+  },
+  {
+    "title": "My new page",
+    "slug": "my-new-page",
+    "description": "A short summary shown on the homepage and search engines.",
+    "createdAt": "2026-11-18",
+    "url": "pages/my-new-page.html"
   }
 ]
