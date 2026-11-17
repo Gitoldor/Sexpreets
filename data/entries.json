@@ -5,5 +5,12 @@
     "description": "Your first automatically generated page.",
     "content": "This is your starter page.\n\nTo create another page, add another object to data/entries.json, then commit and push the change to GitHub. The GitHub Actions workflow will generate the page and publish the updated site.",
     "createdAt": "2026-11-18"
+  },
+  {
+  "title": "My new page",
+  "slug": "my-new-page",
+  "description": "A short summary shown on the homepage and search engines.",
+  "content": "The full page content. You can use plain text and line breaks.",
+  "createdAt": "2026-11-18"
   }
 ]
