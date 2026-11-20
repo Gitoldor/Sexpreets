@@ -40,6 +40,9 @@
     if (!response.ok || result.status !== "success" || !result.data?.order_id) {
       throw new Error(result.message || "FamGateway could not create the payment order.");
     }
+    if (!result.data.upi_intent || !String(result.data.upi_intent).startsWith("upi://pay?")) {
+      throw new Error("FamGateway did not return a valid direct UPI intent for this order.");
+    }
     return result.data;
   }
 
@@ -133,12 +136,13 @@
       active = { post, order, postCode: makeCode(), githubToken };
       code.textContent = active.postCode;
       localStorage.setItem("sho1re1_pending_order", order.order_id);
-      checkout.href = order.checkout_url || ("https://famgateway.in/pay.php?order_id=" + encodeURIComponent(order.order_id));
+      checkout.href = order.upi_intent;
+      checkout.target = "_self";
+      checkout.innerHTML = 'Pay ₹10 with UPI <span>↗</span>';
       checkout.hidden = false;
-      qr.src = order.qr_url || (FAM_BASE + "/api/qr-image.php?order_id=" + encodeURIComponent(order.order_id));
-      qr.hidden = false;
+      qr.hidden = true;
       panel.hidden = false;
-      message.textContent = "Order created for ₹10. Complete payment using the QR or checkout link. We’ll check it every 4 seconds.";
+      message.textContent = "Order created for ₹" + (order.payable_amount || "10") + ". Tap “Pay ₹10 with UPI” to open your installed UPI apps. Return here after paying; we’ll check confirmation every 4 seconds.";
       publishStatus.textContent = "FamGateway order: " + order.order_id;
       panel.scrollIntoView({ behavior: "smooth", block: "start" });
       beginPolling();
