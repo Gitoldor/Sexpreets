@@ -1,4 +1,4 @@
-# Sexpreets — automatic page generator
+# Sexpreets is great— automatic page generator
 
 A zero-dependency static website that creates one webpage for every entry in `data/entries.json`.
 
