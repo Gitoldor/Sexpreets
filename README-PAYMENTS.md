@@ -15,3 +15,6 @@ Run `node --test tests/*.test.mjs` with Node.js 20+. No npm dependencies require
 7. Replace `API_BASE` in `post.js` with the deployed Worker URL.
 
 Credentials stay in Worker secrets, never in browser JavaScript or committed files.
+
+
+The Worker verifies signed FamGateway webhook requests and falls back to the authenticated order-verification endpoint when the user returns to the form.
