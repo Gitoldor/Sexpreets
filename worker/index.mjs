@@ -70,6 +70,21 @@ async function settleIfPaid(env, record) {
   await env.PENDING_POSTS.put(record.orderId, JSON.stringify(record));
   return publishToSho1re1(env, record);
 }
+
+async function verifyWebhookSignature(rawBody, signature, secret) {
+  if (!signature || !secret) return false;
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
+  const expected = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+  if (signature.length !== expected.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < expected.length; i++) mismatch |= signature.charCodeAt(i) ^ expected.charCodeAt(i);
+  return mismatch === 0;
+}
+
 function cors(request) {
   const origin = request.headers.get("origin") || "";
   const allowed = new Set(["https://gitoldor.github.io", "http://localhost:7700", "http://127.0.0.1:7700"]);
@@ -92,7 +107,7 @@ export default {
           const response = await fetch("https://famgateway.in/api/create-order", {
             method: "POST",
             headers: { "content-type": "application/json", "x-api-key": env.FAMGATEWAY_API_KEY, accept: "application/json" },
-            body: JSON.stringify({ amount: PRICE_INR, customer_name: clean(body.customerName || "Sho1re1 user", 80), redirect_url: "https://gitoldor.github.io/Sexpreets/post.html?payment=return" })
+            body: JSON.stringify({ amount: PRICE_INR, customer_name: clean(body.customerName || "Sho1re1 user", 80), redirect_url: "https://gitoldor.github.io/Sexpreets/post.html?payment=return", webhook_url: url.origin + "/api/webhook" })
           });
           const result = await response.json();
           if (!response.ok || result.status !== "success" || !result.data?.order_id) return json({ error: result.message || "Could not create payment order." }, 502, headers);
@@ -113,6 +128,28 @@ export default {
         catch (error) { record.lastError = error.message; await env.PENDING_POSTS.put(orderId, JSON.stringify(record)); }
         return json({ orderId, postCode: record.postCode, status: record.status, published: record.published, note: record.note || "" }, 200, headers);
       }
+
+      if (url.pathname === "/api/webhook" && request.method === "POST") {
+        if (!env.FAMGATEWAY_API_KEY || !env.PENDING_POSTS) return json({ error: "Webhook is not configured." }, 503, headers);
+        const rawBody = await request.text();
+        const signature = request.headers.get("x-famgateway-signature") || "";
+        if (!await verifyWebhookSignature(rawBody, signature, env.FAMGATEWAY_API_KEY)) return json({ error: "Invalid webhook signature." }, 401, headers);
+        const event = JSON.parse(rawBody);
+        if (event.event !== "payment.success" && String(event.status || "").toLowerCase() !== "success") return json({ received: true, ignored: true }, 200, headers);
+        const orderId = clean(event.order_id, 80);
+        const raw = await env.PENDING_POSTS.get(orderId);
+        if (!raw) return json({ error: "Pending post order not found." }, 404, headers);
+        const record = JSON.parse(raw);
+        const amount = Number(event.amount ?? event.payable_amount);
+        if (amount !== PRICE_INR || !event.utr) return json({ error: "Payment amount or UTR is invalid." }, 400, headers);
+        record.status = "paid";
+        record.verifiedAmount = amount;
+        record.utr = String(event.utr);
+        await env.PENDING_POSTS.put(orderId, JSON.stringify(record));
+        const published = await publishToSho1re1(env, record);
+        return json({ received: true, status: published.status, published: published.published }, 200, headers);
+      }
+
       if (url.pathname === "/api/test/complete" && request.method === "POST" && env.TEST_MODE === "true") {
         const body = await request.json(), orderId = clean(body.orderId, 80), raw = await env.PENDING_POSTS.get(orderId);
         if (!raw || !orderId.startsWith("TEST-")) return json({ error: "Test order not found." }, 404, headers);
