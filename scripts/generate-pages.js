@@ -56,7 +56,7 @@ for (const page of pages) {
   fs.writeFileSync(path.join(distDir, "pages", page.slug + ".html"), html);
 }
 
-for (const file of ["index.html", "styles.css", "app.js"]) {
+for (const file of ["index.html", "styles.css", "app.js", "post.html", "post.css", "post.js"]) {
   fs.copyFileSync(path.join(root, file), path.join(distDir, file));
 }
 fs.copyFileSync(path.join(root, "pages.json"), path.join(distDir, "pages.json"));
