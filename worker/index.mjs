@@ -28,7 +28,7 @@ async function verifyFamGateway(env, orderId) {
   const response = await fetch(url, { headers: { accept: "application/json" } });
   if (!response.ok) throw new Error("FamGateway verification request failed.");
   const data = await response.json();
-  return data.data || data;
+  return { ...data, ...(data.data || {}) };
 }
 async function publishToSho1re1(env, record) {
   if (record.published) return record;
