@@ -1,20 +1,19 @@
-# Sho1re1 paid-post flow
+# Sho1re1 browser-only post publishing
 
-The new post form lives at `post.html`. The Worker stores pending post data in KV, creates FamGateway ₹10 orders, verifies payment server-side, and dispatches a publish event to Sho1re1. The main-repository workflow appends the verified record to `window.Sho1re1Places` in `app.js`.
+The post flow runs from the browser. There is no Cloudflare Worker, server, KV database, or backend registration.
 
-## Tests
-Run `node --test tests/*.test.mjs` with Node.js 20+. No npm dependencies required.
+## Flow
+1. Open `post.html` on GitHub Pages.
+2. Enter the FamGateway API key and a GitHub token in the testing connection section. They are used only in the current page session and are not saved by this page.
+3. Fill the Sho1re1 post fields and create a ₹10 FamGateway order.
+4. The browser polls FamGateway's public `/api/checkout-status.php` endpoint.
+5. On a successful response with a UTR, the browser triggers `publish-paid-post.yml` through GitHub's Actions API.
+6. GitHub Actions appends the post to `window.Sho1re1Places` in the Sho1re1 `app.js` database.
 
-## Cloudflare setup
-1. Create a Cloudflare KV namespace named `PENDING_POSTS`.
-2. Replace the placeholder KV namespace ID in `worker/wrangler.toml`.
-3. Deploy from the `worker` directory with Wrangler.
-4. Add Worker secrets `FAMGATEWAY_API_KEY` and `GITHUB_TOKEN`. The GitHub token needs permission to dispatch an event to `Gitoldor/SAWANTWADI-by-THE12`.
-5. Keep `TEST_MODE=true` for simulated orders. Keep `TEST_PUBLISH=false` to prevent test posts reaching the public map. For an end-to-end test publish, temporarily set `TEST_PUBLISH=true` and submit an obvious test post; delete it afterwards.
-6. For live payments, set `TEST_MODE=false` and `TEST_PUBLISH=false`.
-7. Replace `API_BASE` in `post.js` with the deployed Worker URL.
+## GitHub token
+For this test, provide a token that can dispatch Actions in `Gitoldor/SAWANTWADI-by-THE12` (classic token with `repo` scope, or an appropriately scoped fine-grained token with Actions write and repository contents write permissions).
 
-Credentials stay in Worker secrets, never in browser JavaScript or committed files.
+## Browser limitations
+FamGateway's public checkout-status endpoint is documented for browser polling. Direct order creation also runs from the browser. The browser must be allowed by FamGateway CORS policy. If the browser reports a CORS/network error, a browser-only integration cannot bypass that restriction.
 
-
-The Worker verifies signed FamGateway webhook requests and falls back to the authenticated order-verification endpoint when the user returns to the form.
+This is a testing flow: payment confirmation is checked in the browser and the GitHub workflow trusts the values submitted by that browser. It is not suitable as a production payment authorization system.
