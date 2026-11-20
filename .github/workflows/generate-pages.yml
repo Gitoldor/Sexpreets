@@ -9,6 +9,12 @@ on:
       - "index.html"
       - "styles.css"
       - "app.js"
+      - "post.html"
+      - "post.css"
+      - "post.js"
+      - "worker/**"
+      - "tests/**"
+      - "README-PAYMENTS.md"
       - ".github/workflows/generate-pages.yml"
   workflow_dispatch:
 
@@ -37,6 +43,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Run payment-flow unit tests
+        run: node --test tests/*.test.mjs
 
       - name: Generate individual pages and site
         run: node scripts/generate-pages.js
