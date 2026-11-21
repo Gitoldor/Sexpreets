@@ -33,7 +33,7 @@
   async function createOrder(apiKey) {
     const url = new URL(FAM_BASE + "/api/qr.php");
     url.searchParams.set("api_key", apiKey);
-    url.searchParams.set("amount", "10");
+    url.searchParams.set("amount", "1");
     url.searchParams.set("customer_name", "Sho1re1 post");
     const response = await fetch(url.toString(), { method: "GET", headers: { "Accept": "application/json" } });
     const result = await response.json();
@@ -69,7 +69,7 @@
           post_json: JSON.stringify(post),
           order_id: order.order_id,
           utr: String(payment.utr),
-          amount: String(payment.amount ?? order.payable_amount ?? order.amount ?? 10),
+          amount: String(payment.amount ?? order.payable_amount ?? order.amount ?? 1),
           post_code: postCode
         }
       })
@@ -90,8 +90,8 @@
         if (String(result.status || "").toLowerCase() === "success") {
           const utr = result.utr || result.transaction_id;
           if (!utr) throw new Error("FamGateway reported success but returned no UTR. Please contact support before retrying.");
-          const paidAmount = Number(result.amount ?? active.order.payable_amount ?? active.order.amount ?? 10);
-          if (paidAmount !== 10) throw new Error("The confirmed payment amount is not ₹10. Publishing stopped.");
+          const paidAmount = Number(result.amount ?? active.order.payable_amount ?? active.order.amount ?? 1);
+          if (paidAmount !== 1) throw new Error("The confirmed payment amount is not ₹1. Publishing stopped.");
           publishing = true;
           clearInterval(pollTimer);
           showMessage("Payment confirmed by FamGateway. Sending your post to Sho1re1…");
@@ -129,7 +129,7 @@
     const githubToken = document.getElementById("github-token").value.trim();
     if (!apiKey || !githubToken) { showMessage("Enter both connection keys in the testing section first."); return; }
     submit.disabled = true;
-    submit.textContent = "Creating ₹10 order…";
+    submit.textContent = "Creating ₹1 order…";
     try {
       const post = readPost();
       const order = await createOrder(apiKey);
@@ -138,11 +138,11 @@
       localStorage.setItem("sho1re1_pending_order", order.order_id);
       checkout.href = order.upi_intent;
       checkout.target = "_self";
-      checkout.innerHTML = 'Pay ₹10 with UPI <span>↗</span>';
+      checkout.innerHTML = 'Pay ₹1 with UPI <span>↗</span>';
       checkout.hidden = false;
       qr.hidden = true;
       panel.hidden = false;
-      message.textContent = "Order created for ₹" + (order.payable_amount || "10") + ". Tap “Pay ₹10 with UPI” to open your installed UPI apps. Return here after paying; we’ll check confirmation every 4 seconds.";
+      message.textContent = "Order created for ₹" + (order.payable_amount || "1") + ". Tap “Pay ₹1 with UPI” to open your installed UPI apps. Return here after paying; we’ll check confirmation every 4 seconds.";
       publishStatus.textContent = "FamGateway order: " + order.order_id;
       panel.scrollIntoView({ behavior: "smooth", block: "start" });
       beginPolling();
