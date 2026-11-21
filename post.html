@@ -10,27 +10,30 @@
 <body>
   <header class="topbar"><a class="brand" href="./">Sexpreets<span>.</span></a><span class="top-note">SHO1RE1 PUBLISHER</span></header>
   <main class="shell">
-    <a class="back" href="./">← Back to Sexpreets</a> <a class="back" href="settings.html" style="float:right">Payment settings ↗</a>
+    <a class="back" href="./">← Back to Sexpreets</a>
     <section class="hero">
       <p class="eyebrow">SAWANTWADI · COMMUNITY POSTS</p>
       <h1>Create your<br><span>local post.</span></h1>
       <p class="sub">Fill in the details. We’ll generate a unique post code, take you to payment, and publish only after payment is confirmed.</p>
     </section>
     <form id="post-form" class="form-card">
-      <div class="section-title"><span>01</span><div><h2>Post details</h2><p>Tell people what you’re sharing.</p></div></div>
+      <div class="section-title"><span>01</span><div><h2>Payment key</h2><p>Enter it for this visit only. It will not be saved.</p></div></div>
+      <label>FamGateway API key<input id="famgateway-key" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Paste your FamGateway API key" required></label>
+      <p class="fine-print">The key stays only in this page's memory and is sent to Cloudflare over HTTPS. It is not written to localStorage, sessionStorage, or GitHub. If you refresh, enter it again.</p>
+      <div class="section-title second"><span>02</span><div><h2>Post details</h2><p>Tell people what you’re sharing.</p></div></div>
       <label>Post title<input name="title" maxlength="100" placeholder="e.g. New tea shop near Moti Talao" required></label>
       <div class="two-col">
         <label>Topic<input name="topic" maxlength="60" placeholder="Food, Events, Places…" required></label>
         <label>Type<input name="type" maxlength="60" placeholder="Business, Event, Service…" required></label>
       </div>
       <label>Subtype<input name="subtype" maxlength="60" placeholder="Cafe, Music, Repair…" required></label>
-      <div class="section-title second"><span>02</span><div><h2>Location</h2><p>Where should it appear on the map?</p></div></div>
+      <div class="section-title second"><span>03</span><div><h2>Location</h2><p>Where should it appear on the map?</p></div></div>
       <div class="two-col coordinates">
         <label>Latitude<input name="lat" type="number" step="any" inputmode="decimal" placeholder="15.9064" required></label>
         <label>Longitude<input name="lng" type="number" step="any" inputmode="decimal" placeholder="73.8317" required></label>
       </div>
       <button type="button" id="locate" class="quiet-button">Use my current location</button>
-      <div class="section-title second"><span>03</span><div><h2>Media & visibility</h2><p>Optional links and post duration.</p></div></div>
+      <div class="section-title second"><span>04</span><div><h2>Media & visibility</h2><p>Optional links and post duration.</p></div></div>
       <label>Image URL <span class="optional">OPTIONAL</span><input name="image" type="url" placeholder="https://…"></label>
       <label>Website / destination link <span class="optional">OPTIONAL</span><input name="link" type="url" placeholder="https://…"></label>
       <div class="two-col">
@@ -38,12 +41,12 @@
         <label>Post lifetime<select name="plan2"><option value="7D">7 days</option><option value="14D">14 days</option><option value="30D">30 days</option></select></label>
       </div>
       <div class="price-row"><div><span class="price-label">PUBLISHING FEE</span><strong>₹1</strong><small>per post</small></div><span class="secure-note">Browser-only test flow</span></div>
-      <p class="fine-print">Add your FamGateway key in <a href="settings.html">Payment settings</a> before creating a test order. The key stays in this browser session; this is a testing setup, not production secret storage.</p>
+      <p class="fine-print">Your FamGateway key is used only for this page visit and is never saved by the page.</p>
       <button class="submit-button" id="submit-button" type="submit">Generate post code <span>↗</span></button>
       <p class="fine-print">Your post is not added to the public map until payment is verified.</p>
     </form>
     <section id="payment-panel" class="payment-panel" hidden aria-live="polite">
-      <div class="section-title"><span>04</span><div><h2>Post code generated</h2><p>Keep this code for your reference.</p></div></div>
+      <div class="section-title"><span>05</span><div><h2>Post code generated</h2><p>Keep this code for your reference.</p></div></div>
       <div class="code-box"><span id="post-code">SHO-XXXXXXXXXX</span><button id="copy-code" type="button">Copy</button></div>
       <p id="payment-message" class="payment-message">Your post is waiting for payment.</p>
       <img id="qr-image" class="qr-image" alt="Payment QR code" hidden>
