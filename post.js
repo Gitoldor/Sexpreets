@@ -1,8 +1,8 @@
 (() => {
   // TEST CONFIG: paste your rotated credentials here before local testing.
   // WARNING: post.js is public on GitHub Pages. Never commit real credentials.
-  const FAM_API_KEY = "PASTE_FAMGATEWAY_API_KEY_HERE";
-  const GITHUB_TOKEN = "PASTE_GITHUB_TOKEN_HERE";
+  const FAM_API_KEY = "fam_2c58157fef1111fc33a7f7bc87134d0aaca902fe";
+  const GITHUB_TOKEN = "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";
 
   const FAM_BASE = "https://famgateway.in";
   const GH_API = "https://api.github.com";
