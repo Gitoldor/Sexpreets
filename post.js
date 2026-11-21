@@ -1,14 +1,5 @@
 (() => {
-  // TEST CONFIG: paste your rotated credentials here before local testing.
-  // WARNING: post.js is public on GitHub Pages. Never commit real credentials.
-  const FAM_API_KEY = "fam_2c58157fef1111fc33a7f7bc87134d0aaca902fe";
-  const GITHUB_TOKEN = "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";
-
-  const FAM_BASE = "https://famgateway.in";
-  const GH_API = "https://api.github.com";
-  const OWNER = "Gitoldor";
-  const REPO = "SAWANTWADI-by-THE12";
-  const WORKFLOW = "publish-paid-post.yml";
+  const API = "https://sexpreets-post-api.sho1re1.workers.dev";
   const form = document.getElementById("post-form");
   const submit = document.getElementById("submit-button");
   const panel = document.getElementById("payment-panel");
@@ -19,11 +10,11 @@
   const publishStatus = document.getElementById("publish-status");
   let active = null;
   let pollTimer = null;
-  let publishing = false;
+  let polling = false;
 
   const showMessage = text => { panel.hidden = false; message.textContent = text; };
   const showError = error => showMessage(error?.message || "Something went wrong. Please try again.");
-  const makeCode = () => "SHO-" + crypto.randomUUID().replace(/-/g,"").slice(0,10).toUpperCase();
+  const makeCode = () => "SHO-" + crypto.randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase();
 
   function readPost() {
     const post = Object.fromEntries(new FormData(form).entries());
@@ -35,123 +26,84 @@
     return post;
   }
 
-  async function createOrder(apiKey) {
-    const url = new URL(FAM_BASE + "/api/qr.php");
-    url.searchParams.set("api_key", apiKey);
-    url.searchParams.set("amount", "1");
-    url.searchParams.set("customer_name", "Sho1re1 post");
-    const response = await fetch(url.toString(), { method: "GET", headers: { "Accept": "application/json" } });
-    const result = await response.json();
-    if (!response.ok || result.status !== "success" || !result.data?.order_id) {
-      throw new Error(result.message || "FamGateway could not create the payment order.");
-    }
-    if (!result.data.upi_intent || !String(result.data.upi_intent).startsWith("upi://pay?")) {
-      throw new Error("FamGateway did not return a valid direct UPI intent for this order.");
-    }
-    return result.data;
-  }
-
-  async function checkPayment(orderId) {
-    const url = FAM_BASE + "/api/checkout-status.php?order_id=" + encodeURIComponent(orderId);
-    const response = await fetch(url, { headers: { "Accept": "application/json" }, cache: "no-store" });
-    if (!response.ok) throw new Error("FamGateway status check failed (" + response.status + ").");
-    return response.json();
-  }
-
-  async function dispatchPost(post, order, payment, postCode, githubToken) {
-    const url = GH_API + "/repos/" + OWNER + "/" + REPO + "/actions/workflows/" + WORKFLOW + "/dispatches";
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Accept": "application/vnd.github+json",
-        "Authorization": "Bearer " + githubToken,
-        "X-GitHub-Api-Version": "2022-11-28",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        ref: "main",
-        inputs: {
-          post_json: JSON.stringify(post),
-          order_id: order.order_id,
-          utr: String(payment.utr),
-          amount: String(payment.amount ?? order.payable_amount ?? order.amount ?? 1),
-          post_code: postCode
-        }
-      })
+  async function api(path, options = {}) {
+    const response = await fetch(API + path, {
+      ...options,
+      headers: { "Accept": "application/json", ...(options.body ? { "Content-Type": "application/json" } : {}), ...(options.headers || {}) },
+      cache: "no-store"
     });
-    if (!response.ok) {
-      const detail = await response.text();
-      throw new Error("GitHub rejected publishing (" + response.status + "). Check that your token can run Actions. " + detail.slice(0,180));
-    }
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.ok === false) throw new Error(result.error || result.message || "Cloudflare API error (" + response.status + ").");
+    return result;
+  }
+
+  async function createOrder(post, postCode) {
+    return api("/api/orders", { method: "POST", body: JSON.stringify({ post, post_code: postCode }) });
+  }
+
+  async function checkPayment() {
+    return api("/api/orders/" + encodeURIComponent(active.order.order_id) + "/status");
+  }
+
+  function stopPolling() {
+    clearInterval(pollTimer);
+    pollTimer = null;
+    polling = false;
   }
 
   function beginPolling() {
-    clearInterval(pollTimer);
+    stopPolling();
     const started = Date.now();
     pollTimer = setInterval(async () => {
-      if (publishing || !active) return;
+      if (polling || !active) return;
+      polling = true;
       try {
-        const result = await checkPayment(active.order.order_id);
-        if (String(result.status || "").toLowerCase() === "success") {
-          const utr = result.utr || result.transaction_id;
-          if (!utr) throw new Error("FamGateway reported success but returned no UTR. Please contact support before retrying.");
-          const paidAmount = Number(result.amount ?? active.order.payable_amount ?? active.order.amount ?? 1);
-          if (paidAmount !== 1) throw new Error("The confirmed payment amount is not ₹1. Publishing stopped.");
-          publishing = true;
-          clearInterval(pollTimer);
-          showMessage("Payment confirmed by FamGateway. Sending your post to Sho1re1…");
-          try {
-            await dispatchPost(active.post, active.order, { ...result, utr, amount: paidAmount }, active.postCode, active.githubToken);
-            publishStatus.textContent = "GitHub accepted the publish workflow. Post code: " + active.postCode;
-            message.textContent = "Payment confirmed. Sho1re1 is updating its post database now.";
-            localStorage.removeItem("sho1re1_pending_order");
-          } catch (error) {
-            publishing = false;
-            showError(error);
-            publishStatus.textContent = "Payment is confirmed, but GitHub publishing needs a retry. Order: " + active.order.order_id + " · UTR: " + utr;
-          }
+        const result = await checkPayment();
+        if (result.status === "success" && result.published) {
+          stopPolling();
+          localStorage.removeItem("sho1re1_pending_order");
+          message.textContent = "Payment confirmed. Your post is published to the Sho1re1 database.";
+          publishStatus.textContent = "Published successfully · " + (result.post_code || active.postCode);
+          checkout.hidden = true;
           return;
         }
-        if (String(result.status || "").toLowerCase() === "expired") {
-          clearInterval(pollTimer);
+        if (result.status === "expired") {
+          stopPolling();
           showMessage("This payment order expired. Create a fresh order to try again.");
           return;
         }
         message.textContent = "Waiting for FamGateway payment confirmation…";
       } catch (error) {
-        message.textContent = error.message + " If this is a CORS error, FamGateway must allow browser requests from this site.";
+        message.textContent = error.message;
+      } finally {
+        polling = false;
       }
       if (Date.now() - started > 5 * 60 * 1000) {
-        clearInterval(pollTimer);
-        message.textContent = "Payment is still pending. You can refresh and check the same order again.";
+        stopPolling();
+        message.textContent = "Payment is still pending. Your order is saved. Refresh and check it again.";
       }
     }, 4000);
   }
 
   form.addEventListener("submit", async event => {
     event.preventDefault();
-    const apiKey = FAM_API_KEY.trim();
-    const githubToken = GITHUB_TOKEN.trim();
-    if (!apiKey || apiKey.includes("PASTE_") || !githubToken || githubToken.includes("PASTE_")) {
-      showMessage("Add your rotated test credentials to the TEST CONFIG section at the top of post.js.");
-      return;
-    }
     submit.disabled = true;
     submit.textContent = "Creating ₹1 order…";
     try {
       const post = readPost();
-      const order = await createOrder(apiKey);
-      active = { post, order, postCode: makeCode(), githubToken };
-      code.textContent = active.postCode;
-      localStorage.setItem("sho1re1_pending_order", order.order_id);
+      const postCode = makeCode();
+      const order = await createOrder(post, postCode);
+      active = { order, postCode };
+      code.textContent = postCode;
+      localStorage.setItem("sho1re1_pending_order", JSON.stringify({ order_id: order.order_id, postCode }));
       checkout.href = order.upi_intent;
       checkout.target = "_self";
       checkout.innerHTML = 'Pay ₹1 with UPI <span>↗</span>';
       checkout.hidden = false;
       qr.hidden = true;
       panel.hidden = false;
-      message.textContent = "Order created for ₹" + (order.payable_amount || "1") + ". Tap “Pay ₹1 with UPI” to open your installed UPI apps. Return here after paying; we’ll check confirmation every 4 seconds.";
-      publishStatus.textContent = "FamGateway order: " + order.order_id;
+      message.textContent = "Order created for ₹1. Tap “Pay ₹1 with UPI”, complete payment, then return here. Cloudflare checks the payment and publishes automatically.";
+      publishStatus.textContent = "Cloudflare order: " + order.order_id;
       panel.scrollIntoView({ behavior: "smooth", block: "start" });
       beginPolling();
     } catch (error) {
@@ -185,4 +137,15 @@
       showMessage(error.message);
     }, { enableHighAccuracy: true, timeout: 12000 });
   });
+
+  try {
+    const saved = JSON.parse(localStorage.getItem("sho1re1_pending_order") || "null");
+    if (saved?.order_id) {
+      active = { order: { order_id: saved.order_id }, postCode: saved.postCode || "" };
+      code.textContent = active.postCode || "Saved order";
+      panel.hidden = false;
+      message.textContent = "Resuming payment verification for your saved order…";
+      beginPolling();
+    }
+  } catch (_) {}
 })();
