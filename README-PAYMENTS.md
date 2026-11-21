@@ -1,31 +1,34 @@
-# Sexpreets → Sho1re1 Cloudflare publishing
+# Sho1re1 posting with Cloudflare D1
 
-The public post form stays on GitHub Pages, but GitHub is no longer used to publish or store submitted posts.
+The posting form stays on GitHub Pages. Cloudflare Worker handles FamGateway requests and publishes verified posts into D1.
 
-## Flow
-1. The user fills the existing Sho1re1 post fields and gets a unique SHO- code.
-2. The browser sends the post data to the Cloudflare Worker.
-3. The Worker creates the ₹1 FamGateway order and stores a pending order in Cloudflare D1.
-4. The user pays using the returned UPI intent.
-5. The browser polls the Worker. The Worker independently checks FamGateway's order status using its server-side secret.
-6. Only after FamGateway reports success, a UTR is present, and the amount is exactly ₹1, the Worker marks the order paid and inserts the post and payment into D1.
-7. The public posts endpoint reads published posts from D1.
+## Same flow as the earlier GitHub publisher
+
+1. Fill the same post fields: title, topic, type, subtype, latitude, longitude, optional image/link, plan and duration.
+2. Generate a unique `SHO-` post code.
+3. Cloudflare Worker calls FamGateway to create the ₹1 order and stores the post data with a pending order in D1.
+4. The form opens the returned direct `upi://pay` intent.
+5. The browser polls the Cloudflare status route every four seconds, matching the old GitHub version's polling interval.
+6. Worker checks FamGateway status, requires a successful status and UTR, and verifies the amount is ₹1.
+7. Worker writes the payment, published post and final order status to D1 in one batch.
+8. The public homepage reads published posts from the D1-backed API.
 
 ## Cloudflare resources
-- D1: `sexpreets-posts`
+
+- D1 database: `sexpreets-posts`
 - Worker: `sexpreets-post-api`
-- Binding: `DB`
-- Required Worker secret: `FAMGATEWAY_API_KEY`
+- D1 binding: `DB`
+- Public API: `https://sexpreets-post-api.sho1re1.workers.dev`
 
-Set the rotated FamGateway API key as a Worker secret. Do not put it in `post.js`, HTML, or any public repository file. The previously exposed key should be rotated.
+## FamGateway key
 
-## GitHub's remaining role
-GitHub Pages still hosts the static form and website files. No GitHub Personal Access Token is used by the post/payment flow. The old GitHub Actions publishing dispatch has been removed from `post.js`.
+For this test setup, paste the rotated FamGateway key into [Payment settings](settings.html). It is stored in the current browser tab's session storage and sent to the Worker over HTTPS. The Worker also supports a `FAMGATEWAY_API_KEY` secret, which is the recommended production setup. Do not put the real key in public JavaScript or commit it to GitHub. Rotate any key previously exposed in chat or repository history.
 
-## API
+## Routes
+
 - `GET /api/health`
 - `GET /api/posts`
 - `POST /api/orders`
 - `GET /api/orders/:id/status`
 
-Fee remains ₹1 for this current test flow. The database schema is in `schema.sql`.
+The current test fee is ₹1. D1 schema: [schema.sql](schema.sql).
