@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101114"><title>Payment settings · Sexpreets</title><link rel="stylesheet" href="styles.css"><style>
+.settings-card{max-width:560px;margin:48px auto;padding:24px;border:1px solid #34363b;border-radius:18px;background:#17191e;color:#f6f6f7}.settings-card h1{font-size:26px;margin:8px 0}.settings-card p{color:#aeb0b7;line-height:1.55}.settings-card label{display:block;margin:22px 0 8px;font-size:14px}.settings-card input{box-sizing:border-box;width:100%;padding:14px;border:1px solid #454852;border-radius:10px;background:#0e0f12;color:white;font:inherit}.settings-card button{margin-top:14px;padding:13px 18px;border:0;border-radius:10px;background:#f4f4f5;color:#111;font-weight:700}.settings-card .muted{font-size:12px}.settings-card .status{margin-top:14px;color:#b9e8c5}
+</style></head><body><header class="site-header"><a class="brand" href="./">Sexpreets<span>.</span></a><span class="header-note">Private setup</span></header>
+<main class="wrap"><section class="settings-card"><p class="eyebrow">PAYMENT CONFIGURATION</p><h1>FamGateway key</h1><p>Paste your rotated FamGateway API key here. It is kept only in this browser tab's session storage and is not committed to GitHub.</p>
+<label for="fam-key">FamGateway API key</label><input id="fam-key" type="password" autocomplete="off" placeholder="Paste your FamGateway API key">
+<button id="save-key" type="button">Save for this session</button> <button id="clear-key" type="button">Clear</button>
+<p class="status" id="status" role="status"></p><p class="muted">Testing convenience only: the key is sent from this browser to your Cloudflare Worker over HTTPS. Anyone using this same browser session can use it. For production, use a Cloudflare Worker secret instead.</p></section></main>
+<script>
+const input=document.getElementById("fam-key"),status=document.getElementById("status");
+input.value=sessionStorage.getItem("famgateway_api_key")||"";
+document.getElementById("save-key").addEventListener("click",()=>{const key=input.value.trim();if(!key){status.textContent="Paste a key first.";return}sessionStorage.setItem("famgateway_api_key",key);status.textContent="Saved for this browser session. Return to the post form.";});
+document.getElementById("clear-key").addEventListener("click",()=>{sessionStorage.removeItem("famgateway_api_key");input.value="";status.textContent="Key cleared from this browser session.";});
+</script></body></html>
