@@ -15,6 +15,7 @@
   const showMessage = text => { panel.hidden = false; message.textContent = text; };
   const showError = error => showMessage(error?.message || "Something went wrong. Please try again.");
   const makeCode = () => "SHO-" + crypto.randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase();
+  const getKey = () => sessionStorage.getItem("famgateway_api_key") || "";
 
   function readPost() {
     const post = Object.fromEntries(new FormData(form).entries());
@@ -27,18 +28,30 @@
   }
 
   async function api(path, options = {}) {
+    const key = getKey();
+    if (!key) throw new Error("Add your FamGateway key in Payment settings first.");
     const response = await fetch(API + path, {
       ...options,
-      headers: { "Accept": "application/json", ...(options.body ? { "Content-Type": "application/json" } : {}), ...(sessionStorage.getItem("famgateway_api_key") ? { "X-FamGateway-Api-Key": sessionStorage.getItem("famgateway_api_key") } : {}), ...(options.headers || {}) },
+      headers: {
+        "Accept": "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        "X-FamGateway-Api-Key": key,
+        ...(options.headers || {})
+      },
       cache: "no-store"
     });
     const result = await response.json().catch(() => ({}));
-    if (!response.ok || result.ok === false) throw new Error(result.error || result.message || "Cloudflare API error (" + response.status + ").");
+    if (!response.ok || result.ok === false) {
+      throw new Error(result.error || result.message || "Cloudflare API error (" + response.status + ").");
+    }
     return result;
   }
 
   async function createOrder(post, postCode) {
-    return api("/api/orders", { method: "POST", body: JSON.stringify({ post, post_code: postCode }) });
+    return api("/api/orders", {
+      method: "POST",
+      body: JSON.stringify({ post, post_code: postCode })
+    });
   }
 
   async function checkPayment() {
@@ -51,6 +64,14 @@
     polling = false;
   }
 
+  function savePending() {
+    if (!active) return;
+    localStorage.setItem("sho1re1_pending_order", JSON.stringify({
+      order_id: active.order.order_id,
+      postCode: active.postCode
+    }));
+  }
+
   function beginPolling() {
     stopPolling();
     const started = Date.now();
@@ -59,7 +80,7 @@
       polling = true;
       try {
         const result = await checkPayment();
-        if (result.status === "success" && result.published) {
+        if (String(result.status || "").toLowerCase() === "success" && result.published === true) {
           stopPolling();
           localStorage.removeItem("sho1re1_pending_order");
           message.textContent = "Payment confirmed. Your post is published to the Sho1re1 database.";
@@ -67,12 +88,16 @@
           checkout.hidden = true;
           return;
         }
-        if (result.status === "expired") {
+        if (String(result.status || "").toLowerCase() === "expired") {
           stopPolling();
-          showMessage("This payment order expired. Create a fresh order to try again.");
+          message.textContent = "This payment order expired. Create a fresh order to try again.";
           return;
         }
-        message.textContent = "Waiting for FamGateway payment confirmation…";
+        if (result.status === "success" && result.published !== true) {
+          message.textContent = result.message || "Payment confirmed. Finishing publication to Sho1re1…";
+        } else {
+          message.textContent = "Waiting for FamGateway payment confirmation…";
+        }
       } catch (error) {
         message.textContent = error.message;
       } finally {
@@ -93,17 +118,20 @@
       const post = readPost();
       const postCode = makeCode();
       const order = await createOrder(post, postCode);
-      active = { order, postCode };
+      if (!order.order_id || !order.upi_intent || !String(order.upi_intent).startsWith("upi://pay?")) {
+        throw new Error("Cloudflare did not receive a valid FamGateway UPI order.");
+      }
+      active = { post, order, postCode };
       code.textContent = postCode;
-      localStorage.setItem("sho1re1_pending_order", JSON.stringify({ order_id: order.order_id, postCode }));
+      savePending();
       checkout.href = order.upi_intent;
       checkout.target = "_self";
       checkout.innerHTML = 'Pay ₹1 with UPI <span>↗</span>';
       checkout.hidden = false;
       qr.hidden = true;
       panel.hidden = false;
-      message.textContent = "Order created for ₹1. Tap “Pay ₹1 with UPI”, complete payment, then return here. Cloudflare checks the payment and publishes automatically.";
-      publishStatus.textContent = "Cloudflare order: " + order.order_id;
+      message.textContent = "Order created for ₹1. Tap “Pay ₹1 with UPI” to open your installed UPI apps. Return here after paying; we’ll check confirmation every 4 seconds.";
+      publishStatus.textContent = "FamGateway order: " + (order.gateway_order_id || order.order_id);
       panel.scrollIntoView({ behavior: "smooth", block: "start" });
       beginPolling();
     } catch (error) {
