@@ -1,19 +1,31 @@
-# Sho1re1 browser-only post publishing
+# Sexpreets → Sho1re1 Cloudflare publishing
 
-The post flow runs from the browser. There is no Cloudflare Worker, server, KV database, or backend registration.
+The public post form stays on GitHub Pages, but GitHub is no longer used to publish or store submitted posts.
 
 ## Flow
-1. Open `post.html` on GitHub Pages.
-2. For local testing, add rotated credentials to the TEST CONFIG constants at the top of `post.js`. Do not commit real credentials: GitHub Pages serves this JavaScript publicly.
-3. Fill the Sho1re1 post fields and create a ₹1 FamGateway order.
-4. The browser polls FamGateway's public `/api/checkout-status.php` endpoint.
-5. On a successful response with a UTR, the browser triggers `publish-paid-post.yml` through GitHub's Actions API.
-6. GitHub Actions appends the post to `window.Sho1re1Places` in the Sho1re1 `app.js` database.
+1. The user fills the existing Sho1re1 post fields and gets a unique SHO- code.
+2. The browser sends the post data to the Cloudflare Worker.
+3. The Worker creates the ₹1 FamGateway order and stores a pending order in Cloudflare D1.
+4. The user pays using the returned UPI intent.
+5. The browser polls the Worker. The Worker independently checks FamGateway's order status using its server-side secret.
+6. Only after FamGateway reports success, a UTR is present, and the amount is exactly ₹1, the Worker marks the order paid and inserts the post and payment into D1.
+7. The public posts endpoint reads published posts from D1.
 
-## GitHub token
-For this test, provide a token that can dispatch Actions in `Gitoldor/SAWANTWADI-by-THE12` (classic token with `repo` scope, or an appropriately scoped fine-grained token with Actions write and repository contents write permissions).
+## Cloudflare resources
+- D1: `sexpreets-posts`
+- Worker: `sexpreets-post-api`
+- Binding: `DB`
+- Required Worker secret: `FAMGATEWAY_API_KEY`
 
-## Browser limitations
-FamGateway's public checkout-status endpoint is documented for browser polling. Direct order creation also runs from the browser. The browser must be allowed by FamGateway CORS policy. If the browser reports a CORS/network error, a browser-only integration cannot bypass that restriction.
+Set the rotated FamGateway API key as a Worker secret. Do not put it in `post.js`, HTML, or any public repository file. The previously exposed key should be rotated.
 
-This is a testing flow: payment confirmation is checked in the browser and the GitHub workflow trusts the values submitted by that browser. It is not suitable as a production payment authorization system.
+## GitHub's remaining role
+GitHub Pages still hosts the static form and website files. No GitHub Personal Access Token is used by the post/payment flow. The old GitHub Actions publishing dispatch has been removed from `post.js`.
+
+## API
+- `GET /api/health`
+- `GET /api/posts`
+- `POST /api/orders`
+- `GET /api/orders/:id/status`
+
+Fee remains ₹1 for this current test flow. The database schema is in `schema.sql`.
