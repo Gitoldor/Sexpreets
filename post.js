@@ -15,7 +15,7 @@
   const showMessage = text => { panel.hidden = false; message.textContent = text; };
   const showError = error => showMessage(error?.message || "Something went wrong. Please try again.");
   const makeCode = () => "SHO-" + crypto.randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase();
-  const getKey = () => sessionStorage.getItem("famgateway_api_key") || "";
+  const getKey = () => document.getElementById("famgateway-key")?.value.trim() || "";
 
   function readPost() {
     const post = Object.fromEntries(new FormData(form).entries());
@@ -29,7 +29,7 @@
 
   async function api(path, options = {}) {
     const key = getKey();
-    if (!key) throw new Error("Add your FamGateway key in Payment settings first.");
+    if (!key) throw new Error("Enter your FamGateway key in the field above first.");
     const response = await fetch(API + path, {
       ...options,
       headers: {
@@ -105,7 +105,7 @@
       }
       if (Date.now() - started > 5 * 60 * 1000) {
         stopPolling();
-        message.textContent = "Payment is still pending. Your order is saved. Refresh and check it again.";
+        message.textContent = "Payment is still pending. Your order ID is saved, but the key is not. Re-enter your FamGateway key after refreshing to resume checking.";
       }
     }, 4000);
   }
