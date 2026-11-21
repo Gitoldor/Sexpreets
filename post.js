@@ -29,7 +29,7 @@
   async function api(path, options = {}) {
     const response = await fetch(API + path, {
       ...options,
-      headers: { "Accept": "application/json", ...(options.body ? { "Content-Type": "application/json" } : {}), ...(options.headers || {}) },
+      headers: { "Accept": "application/json", ...(options.body ? { "Content-Type": "application/json" } : {}), ...(sessionStorage.getItem("famgateway_api_key") ? { "X-FamGateway-Api-Key": sessionStorage.getItem("famgateway_api_key") } : {}), ...(options.headers || {}) },
       cache: "no-store"
     });
     const result = await response.json().catch(() => ({}));
