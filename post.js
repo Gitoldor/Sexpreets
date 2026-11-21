@@ -1,4 +1,9 @@
 (() => {
+  // TEST CONFIG: paste your rotated credentials here before local testing.
+  // WARNING: post.js is public on GitHub Pages. Never commit real credentials.
+  const FAM_API_KEY = "PASTE_FAMGATEWAY_API_KEY_HERE";
+  const GITHUB_TOKEN = "PASTE_GITHUB_TOKEN_HERE";
+
   const FAM_BASE = "https://famgateway.in";
   const GH_API = "https://api.github.com";
   const OWNER = "Gitoldor";
@@ -125,9 +130,12 @@
 
   form.addEventListener("submit", async event => {
     event.preventDefault();
-    const apiKey = document.getElementById("fam-key").value.trim();
-    const githubToken = document.getElementById("github-token").value.trim();
-    if (!apiKey || !githubToken) { showMessage("Enter both connection keys in the testing section first."); return; }
+    const apiKey = FAM_API_KEY.trim();
+    const githubToken = GITHUB_TOKEN.trim();
+    if (!apiKey || apiKey.includes("PASTE_") || !githubToken || githubToken.includes("PASTE_")) {
+      showMessage("Add your rotated test credentials to the TEST CONFIG section at the top of post.js.");
+      return;
+    }
     submit.disabled = true;
     submit.textContent = "Creating ₹1 order…";
     try {
