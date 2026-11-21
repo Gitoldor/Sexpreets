@@ -4,7 +4,7 @@ The post flow runs from the browser. There is no Cloudflare Worker, server, KV d
 
 ## Flow
 1. Open `post.html` on GitHub Pages.
-2. Enter the FamGateway API key and a GitHub token in the testing connection section. They are used only in the current page session and are not saved by this page.
+2. For local testing, add rotated credentials to the TEST CONFIG constants at the top of `post.js`. Do not commit real credentials: GitHub Pages serves this JavaScript publicly.
 3. Fill the Sho1re1 post fields and create a ₹1 FamGateway order.
 4. The browser polls FamGateway's public `/api/checkout-status.php` endpoint.
 5. On a successful response with a UTR, the browser triggers `publish-paid-post.yml` through GitHub's Actions API.
