@@ -1,34 +1,34 @@
 # Sho1re1 posting with Cloudflare D1
 
-The posting form stays on GitHub Pages. Cloudflare Worker handles FamGateway requests and publishes verified posts into D1.
+The posting form stays on GitHub Pages. The Cloudflare Worker creates a FamGateway checkout link, but it does not create a D1 row at checkout time and does not verify payment.
 
-## Same flow as the earlier GitHub publisher
+## Current browser-confirmation flow
 
-1. Fill the same post fields: title, topic, type, subtype, latitude, longitude, optional image/link, plan and duration.
-2. Generate a unique `SHO-` post code.
-3. Cloudflare Worker calls FamGateway to create the ₹1 order and stores the post data with a pending order in D1.
-4. The form opens the returned direct `upi://pay` intent.
-5. The browser polls the Cloudflare status route every four seconds, matching the old GitHub version's polling interval.
-6. Worker checks FamGateway status, requires a successful status and UTR, and verifies the amount is ₹1.
-7. Worker writes the payment, published post and final order status to D1 in one batch.
-8. The public homepage reads published posts from the D1-backed API.
+1. Fill in the post details. They remain in the browser form.
+2. Tap Pay ₹1. The Worker asks FamGateway to create a checkout link; no post/order record is written to D1.
+3. Complete payment in the UPI app and return to the page.
+4. Tap “I've paid — publish my post”.
+5. The browser sends the post to the POST /api/posts endpoint; the Worker writes it directly as published.
+6. The homepage reads published posts from GET /api/posts.
+
+## Important limitation
+
+This is a convenience flow, not secure payment verification. The Worker does not independently confirm that the UPI payment succeeded. Anyone can call the public POST /api/posts endpoint without paying. Do not use this design for real paid access or revenue collection. For enforced payment, payment status must be verified by a trusted server-side integration or gateway webhook.
 
 ## Cloudflare resources
 
-- D1 database: `sexpreets-posts`
-- Worker: `sexpreets-post-api`
-- D1 binding: `DB`
-- Public API: `https://sexpreets-post-api.sho1re1.workers.dev`
+- D1 database: sexpreets-posts
+- Worker: sexpreets-post-api
+- D1 binding: DB
+- API: https://sexpreets-post-api.sho1re1.workers.dev
 
 ## FamGateway key
 
-For this test setup, paste the rotated FamGateway key into [Payment settings](settings.html). It is stored in the current browser tab's session storage and sent to the Worker over HTTPS. The Worker also supports a `FAMGATEWAY_API_KEY` secret, which is the recommended production setup. Do not put the real key in public JavaScript or commit it to GitHub. Rotate any key previously exposed in chat or repository history.
+Store the rotated FamGateway key in settings.html; it is kept in the current browser tab's session storage and sent to the Worker over HTTPS for checkout creation. Do not put the key in public JavaScript or commit it to GitHub. Rotate any key previously exposed in public code/history.
 
 ## Routes
 
-- `GET /api/health`
-- `GET /api/posts`
-- `POST /api/orders`
-- `GET /api/orders/:id/status`
-
-The current test fee is ₹1. D1 schema: [schema.sql](schema.sql).
+- GET /api/health
+- GET /api/posts
+- POST /api/orders — creates checkout only; no D1 write
+- POST /api/posts — writes a post after the browser's “I've paid” confirmation
