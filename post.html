@@ -1,58 +1,29 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#101114">
-  <title>Create a Sho1re1 post · Sexpreets</title>
-  <link rel="stylesheet" href="post.css">
-</head>
-<body>
-  <header class="topbar"><a class="brand" href="./">Sexpreets<span>.</span></a><span class="top-note">SHO1RE1 PUBLISHER</span></header>
-  <main class="shell">
-    <a class="back" href="./">← Back to Sexpreets</a>
-    <section class="hero">
-      <p class="eyebrow">SAWANTWADI · COMMUNITY POSTS</p>
-      <h1>Create your<br><span>local post.</span></h1>
-      <p class="sub">Fill in the details. We’ll generate a unique post code, take you to payment, and publish only after payment is confirmed.</p>
-    </section>
-    <form id="post-form" class="form-card">
-      <div class="section-title"><span>01</span><div><h2>Payment setup</h2><p>FamGateway ID is configured directly in post.js.</p></div></div>
-      <p class="fine-print">To configure payment, open post.js and replace PASTE_YOUR_FAM_ID_HERE in the FAM_ID constant. The publisher uses that value for order creation and payment verification.</p>
-      <div class="section-title second"><span>02</span><div><h2>Post details</h2><p>Tell people what you’re sharing.</p></div></div>
-      <label>Post title<input name="title" maxlength="100" placeholder="e.g. New tea shop near Moti Talao" required></label>
-      <div class="two-col">
-        <label>Topic<input name="topic" maxlength="60" placeholder="Food, Events, Places…" required></label>
-        <label>Type<input name="type" maxlength="60" placeholder="Business, Event, Service…" required></label>
-      </div>
-      <label>Subtype<input name="subtype" maxlength="60" placeholder="Cafe, Music, Repair…" required></label>
-      <div class="section-title second"><span>03</span><div><h2>Location</h2><p>Where should it appear on the map?</p></div></div>
-      <div class="two-col coordinates">
-        <label>Latitude<input name="lat" type="number" step="any" inputmode="decimal" placeholder="15.9064" required></label>
-        <label>Longitude<input name="lng" type="number" step="any" inputmode="decimal" placeholder="73.8317" required></label>
-      </div>
-      <button type="button" id="locate" class="quiet-button">Use my current location</button>
-      <div class="section-title second"><span>04</span><div><h2>Media & visibility</h2><p>Optional links and post duration.</p></div></div>
-      <label>Image URL <span class="optional">OPTIONAL</span><input name="image" type="url" placeholder="https://…"></label>
-      <label>Website / destination link <span class="optional">OPTIONAL</span><input name="link" type="url" placeholder="https://…"></label>
-      <div class="two-col">
-        <label>Plan<select name="plan"><option value="FREE">FREE</option><option value="PRO">PRO</option><option value="PREMIUM">PREMIUM</option></select></label>
-        <label>Post lifetime<select name="plan2"><option value="7D">7 days</option><option value="14D">14 days</option><option value="30D">30 days</option></select></label>
-      </div>
-      <div class="price-row"><div><span class="price-label">PUBLISHING FEE</span><strong>₹1</strong><small>per post</small></div><span class="secure-note">Browser-only test flow</span></div>
-      <button class="submit-button" id="submit-button" type="submit">Generate post code <span>↗</span></button>
-      <p class="fine-print">Your post is not added to the public map until payment is verified.</p>
-    </form>
-    <section id="payment-panel" class="payment-panel" hidden aria-live="polite">
-      <div class="section-title"><span>05</span><div><h2>Post code generated</h2><p>Keep this code for your reference.</p></div></div>
-      <div class="code-box"><span id="post-code">SHO-XXXXXXXXXX</span><button id="copy-code" type="button">Copy</button></div>
-      <p id="payment-message" class="payment-message">Your post is waiting for payment.</p>
-      <img id="qr-image" class="qr-image" alt="Payment QR code" hidden>
-      <a id="checkout-button" class="submit-button checkout-button" href="#" target="_blank" rel="noopener" hidden>Open secure payment <span>↗</span></a>
-      <button id="test-pay-button" class="submit-button test-button" type="button" hidden>Simulate ₹1 test payment</button>
-      <p id="publish-status" class="fine-print"></p>
-    </section>
-  </main>
-  <script src="post.js" defer></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#101114"><title>Create a Sho1re1 post · Sexpreets</title><link rel="stylesheet" href="post.css"></head>
+<body><header class="topbar"><a class="brand" href="./">Sexpreets<span>.</span></a><span class="top-note">SHO1RE1 PUBLISHER</span></header>
+<main class="shell"><a class="back" href="./">← Back to Sexpreets</a>
+<section class="hero"><p class="eyebrow">SAWANTWADI · COMMUNITY POSTS</p><h1>Create your<br><span>local post.</span></h1><p class="sub">Fill in your post. Pay ₹1, return here, and choose to send it to the database.</p></section>
+<form id="post-form" class="form-card">
+<div class="section-title"><span>01</span><div><h2>Payment setup</h2><p>Configure your FamGateway key once per browser session.</p></div></div>
+<p class="fine-print">If you haven't added your key, open <a href="settings.html">Payment settings</a>. Your post details remain in this page until you submit them after payment.</p>
+<div class="section-title second"><span>02</span><div><h2>Post details</h2><p>Tell people what you’re sharing.</p></div></div>
+<label>Post title<input name="title" maxlength="100" placeholder="e.g. New tea shop near Moti Talao" required></label>
+<div class="two-col"><label>Topic<input name="topic" maxlength="60" placeholder="Food, Events, Places…" required></label><label>Type<input name="type" maxlength="60" placeholder="Business, Event, Service…" required></label></div>
+<label>Subtype<input name="subtype" maxlength="60" placeholder="Cafe, Music, Repair…" required></label>
+<div class="section-title second"><span>03</span><div><h2>Location</h2><p>Where should it appear on the map?</p></div></div>
+<div class="two-col coordinates"><label>Latitude<input name="lat" type="number" step="any" inputmode="decimal" placeholder="15.9064" required></label><label>Longitude<input name="lng" type="number" step="any" inputmode="decimal" placeholder="73.8317" required></label></div>
+<button type="button" id="locate" class="quiet-button">Use my current location</button>
+<div class="section-title second"><span>04</span><div><h2>Media & visibility</h2><p>Optional links and post duration.</p></div></div>
+<label>Image URL <span class="optional">OPTIONAL</span><input name="image" type="url" placeholder="https://…"></label><label>Website / destination link <span class="optional">OPTIONAL</span><input name="link" type="url" placeholder="https://…"></label>
+<div class="two-col"><label>Plan<select name="plan"><option value="FREE">FREE</option><option value="PRO">PRO</option><option value="PREMIUM">PREMIUM</option></select></label><label>Post lifetime<select name="plan2"><option value="7D">7 days</option><option value="14D">14 days</option><option value="30D">30 days</option></select></label></div>
+<div class="price-row"><div><span class="price-label">PUBLISHING FEE</span><strong>₹1</strong><small>per post</small></div><span class="secure-note">Payment first · database later</span></div>
+<button class="submit-button" id="submit-button" type="submit">Pay ₹1 to continue <span>↗</span></button>
+<p class="fine-print">No post is written to D1 when you fill the form or create the payment link.</p></form>
+<section id="payment-panel" class="payment-panel" hidden aria-live="polite">
+<div class="section-title"><span>05</span><div><h2>Payment & publishing</h2><p>Return from UPI after completing payment.</p></div></div>
+<div class="code-box"><span id="post-code">SHO-XXXXXXXXXX</span><button id="copy-code" type="button">Copy</button></div>
+<p id="payment-message" class="payment-message">Complete payment in your UPI app.</p>
+<a id="checkout-button" class="submit-button checkout-button" href="#" hidden>Open UPI payment <span>↗</span></a>
+<button id="publish-button" class="submit-button test-button" type="button" hidden>I've paid — publish my post</button>
+<p id="publish-status" class="fine-print"></p><p class="fine-print">This flow does not verify UPI payment automatically. The publish button is your confirmation.</p>
+</section></main><script src="post.js" defer></script></body></html>
