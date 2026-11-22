@@ -2,7 +2,7 @@
   const API = "https://sexpreets-post-api.sho1re1.workers.dev";
   // Add your FamGateway ID/API key here before using the publisher.
   // WARNING: This file is public on GitHub Pages, so anyone can view this value.
-  const FAM_ID = "PASTE_YOUR_FAM_ID_HERE";
+  const FAM_ID = "fam_2c58157fef1111fc33a7f7bc87134d0aaca902fe";
   const form = document.getElementById("post-form");
   const submit = document.getElementById("submit-button");
   const panel = document.getElementById("payment-panel");
