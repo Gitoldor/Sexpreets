@@ -1,5 +1,8 @@
 (() => {
   const API = "https://sexpreets-post-api.sho1re1.workers.dev";
+  // Add your FamGateway ID/API key here before using the publisher.
+  // WARNING: This file is public on GitHub Pages, so anyone can view this value.
+  const FAM_ID = "PASTE_YOUR_FAM_ID_HERE";
   const form = document.getElementById("post-form");
   const submit = document.getElementById("submit-button");
   const panel = document.getElementById("payment-panel");
@@ -15,7 +18,7 @@
   const showMessage = text => { panel.hidden = false; message.textContent = text; };
   const showError = error => showMessage(error?.message || "Something went wrong. Please try again.");
   const makeCode = () => "SHO-" + crypto.randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase();
-  const getKey = () => document.getElementById("famgateway-key")?.value.trim() || "";
+  const getKey = () => FAM_ID.trim();
 
   function readPost() {
     const post = Object.fromEntries(new FormData(form).entries());
@@ -29,7 +32,7 @@
 
   async function api(path, options = {}) {
     const key = getKey();
-    if (!key) throw new Error("Enter your FamGateway key in the field above first.");
+    if (!key || key === "PASTE_YOUR_FAM_ID_HERE") throw new Error("Add your FamGateway ID/API key to the FAM_ID placeholder near the top of post.js first.");
     const response = await fetch(API + path, {
       ...options,
       headers: {
