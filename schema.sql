@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS posts (
   created_on TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'published',
   order_id TEXT NOT NULL UNIQUE,
-  utr TEXT NOT NULL
+  utr TEXT NOT NULL,
+  gateway_order_id TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_on DESC);
 CREATE INDEX IF NOT EXISTS idx_posts_topic ON posts(topic);
